@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torcida Amarela — Dashboard de Estoque</title>
+<style>
+:root{color-scheme:light;--y:#F5C400;--dk:#2C1A00;--dk2:#3D2800;--w:#FFFFFF;--red:#B82020;--red-bg:#FCEAEA;--ora:#C06010;--ora-bg:#FEF0E0;--grn:#1B5E20;--grn-bg:#E8F5E9;--blu:#1434CB;--gray:#7A6A50;--bg:#F2EDE0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--dk);font-size:13px;line-height:1.5;}
+
+/* HEADER */
+.hdr{background:var(--y);position:relative;overflow:hidden;padding:20px 24px 16px;}
+.hdr-geo{position:absolute;top:0;right:0;width:340px;height:170px;opacity:.13;pointer-events:none;}
+.hdr-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}
+.brand-title{font-family:'Arial Black','Impact',Arial,sans-serif;font-size:38px;font-weight:900;text-transform:uppercase;line-height:.9;color:var(--dk);margin-bottom:5px;}
+.brand-eye{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dk2);opacity:.65;margin-bottom:3px;}
+.brand-sub{font-size:11px;color:var(--dk2);opacity:.7;}
+.logos{display:flex;align-items:center;gap:12px;margin-bottom:6px;justify-content:flex-end;}
+.lv{font-family:'Arial Black',Arial,sans-serif;font-size:18px;font-weight:900;font-style:italic;color:var(--blu);}
+.lsep{width:1px;height:16px;background:var(--dk);opacity:.3;}
+.lnom{font-family:'Arial Black',Arial,sans-serif;font-size:14px;font-weight:900;color:var(--dk);}
+.lfifa{font-size:10px;font-weight:700;color:var(--dk2);border:1.5px solid var(--dk);padding:2px 5px;border-radius:3px;opacity:.65;}
+.parc{font-size:10px;color:var(--dk2);opacity:.5;}
+.save-pill{display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:10px;padding:3px 9px;border-radius:4px;background:var(--dk);color:var(--y);font-weight:700;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--y);}
+.sdot.ok{background:#80FF80;}
+.sdot.saving{background:#FFD080;animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ts{font-size:10px;color:var(--dk2);opacity:.4;margin-top:3px;}
+
+/* TABS */
+.tabs{display:flex;background:var(--dk);padding:0 24px;gap:0;}
+.tab{padding:11px 20px;font-size:12px;font-weight:700;color:#888;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;user-select:none;white-space:nowrap;}
+.tab:hover{color:#ccc;}
+.tab.active{color:var(--y);border-bottom-color:var(--y);}
+
+/* LAYOUT */
+.main{padding:16px 24px 32px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:18px;}
+.kpi{background:var(--dk);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:-16px;right:-16px;width:60px;height:60px;border-radius:50%;border:8px solid var(--y);opacity:.08;}
+.kl{font-size:10px;color:var(--y);text-transform:uppercase;letter-spacing:.05em;opacity:.8;margin-bottom:4px;}
+.kv{font-family:'Arial Black',Arial,sans-serif;font-size:24px;font-weight:900;color:var(--y);line-height:1;}
+.ks{font-size:10px;color:#fff;opacity:.4;margin-top:3px;}
+.kpi.ak .kv{color:#FF8080;}
+.kpi.wk .kv{color:#FFD080;}
+.sec{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--gray);opacity:.2;}
+.card{background:var(--w);border-radius:12px;overflow:auto;margin-bottom:14px;box-shadow:0 1px 5px rgba(44,26,0,.07);}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:1250px;}
+th{background:var(--dk);color:var(--y);font-weight:700;font-size:10px;padding:8px 8px;text-align:center;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;}
+th.l{text-align:left;min-width:140px;}
+th.sub{background:#3A2400;color:#E0C060;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;padding:5px 6px;}
+th.sub-e{background:#2A1800;color:#B89040;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;padding:5px 6px;}
+th.meta-h{background:#0A3060;color:#AAD0FF;}
+th.meta-sub{background:#082448;color:#8AB8E8;font-size:9px;font-weight:400;}
+th.prog-h{background:#1A3020;color:#90E8A0;}
+th.prog-sub{background:#0F2018;color:#60B870;font-size:9px;font-weight:400;}
+th.ev-end{background:#3A2400;color:#E0C060;}
+td{padding:7px 8px;text-align:center;border-bottom:.5px solid #EDE8DC;white-space:nowrap;}
+td.l{text-align:left;font-weight:700;vertical-align:middle;}
+td.ini-sub{font-size:10px;color:var(--gray);font-weight:400;display:block;margin-top:1px;}
+tr:last-child td{border-bottom:none;}
+tr:nth-child(even) td{background:#FAF7EF;}
+.s-ok{color:var(--dk);}
+.s-mid{color:var(--ora);font-weight:700;}
+.s-low{color:var(--red);font-weight:800;}
+.s-zero{color:var(--red);font-weight:900;background:#FCEAEA!important;}
+.s-proj{color:#9A8060;font-style:italic;}
+
+/* INPUTS */
+.ni{width:62px;padding:4px 5px;border:1.5px solid #DDD8CC;border-radius:5px;font-size:12px;text-align:center;font-family:inherit;color:var(--dk);background:#FFFDF5;transition:border-color .15s,box-shadow .15s;}
+.ni:focus{outline:none;border-color:var(--y);box-shadow:0 0 0 3px rgba(245,196,0,.2);background:#fff;}
+.ni.hv{background:#FFFCE0;border-color:#D0B800;font-weight:600;}
+.ni.meta-i{background:#F0F8FF;border-color:#99BBDD;color:#0A3060;}
+.ni.meta-i.hv{background:#D6EEFF;border-color:#4488BB;font-weight:600;}
+
+/* META LINKED CELL (future events in Realizado) */
+.meta-link{display:inline-block;padding:4px 8px;background:#F0F0F0;border:1.5px dashed #CCC;border-radius:5px;font-size:11px;color:#888;min-width:48px;text-align:center;}
+.meta-link.set{background:#EEF4FF;border-color:#99BBDD;color:#0A3060;font-weight:600;}
+.meta-lbl{font-size:8px;color:#BBB;display:block;margin-top:1px;}
+
+/* ALERTS */
+.alert-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+.ac{background:var(--w);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(44,26,0,.06);border-left:4px solid #ccc;}
+.ac.crit{border-left-color:var(--red);}
+.ac.warn{border-left-color:var(--ora);}
+.ac.ok{border-left-color:var(--grn);}
+.an{font-size:12px;font-weight:700;margin-bottom:2px;}
+.ar{font-size:12px;font-weight:700;margin-bottom:2px;}
+.ad{font-size:10px;color:var(--gray);}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:9px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.btn{padding:6px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+.btn-dk{background:var(--dk);color:var(--y);}
+.btn-dk:hover{background:var(--dk2);}
+.btn-out{background:transparent;color:var(--dk);border:1.5px solid #CCC8BC;}
+.btn-out:hover{background:#EDE8DC;}
+.btn-red{background:transparent;color:var(--red);border:1.5px solid #EECCCC;}
+.btn-red:hover{background:var(--red-bg);}
+.tip{font-size:11px;color:var(--gray);margin-left:4px;}
+
+/* PILLS */
+.pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;font-weight:700;}
+.pbad{background:var(--red-bg);color:var(--red);}
+.pok{background:var(--grn-bg);color:var(--grn);}
+.pwarn{background:var(--ora-bg);color:var(--ora);}
+.pgray{background:#F0ECE4;color:var(--gray);}
+.pct-pill{display:inline-block;font-size:10px;padding:2px 6px;border-radius:3px;font-weight:700;}
+.pct-ok{background:var(--grn-bg);color:var(--grn);}
+.pct-bad{background:var(--red-bg);color:var(--red);}
+.pct-neu{background:#F0ECE4;color:var(--gray);}
+.vs-good{color:var(--grn);font-weight:700;}
+.vs-bad{color:var(--red);font-weight:700;}
+.vs-zero{color:var(--gray);}
+
+/* PROGNÓSTICO */
+.prog-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px;}
+.pc{background:var(--dk);border-radius:10px;padding:12px 14px;}
+.pc-label{font-size:10px;color:var(--y);text-transform:uppercase;letter-spacing:.05em;opacity:.8;margin-bottom:4px;}
+.pc-val{font-family:'Arial Black',Arial,sans-serif;font-size:22px;font-weight:900;color:var(--y);}
+.pc-sub{font-size:10px;color:#fff;opacity:.4;margin-top:3px;}
+.pc.risk .pc-val{color:#FF8080;}
+.pc.warn .pc-val{color:#FFD080;}
+
+.footnote{font-size:10px;color:var(--gray);margin-top:14px;border-top:1px solid #DDD8CE;padding-top:10px;line-height:1.8;opacity:.7;}
+@media print{.tabs,.toolbar{display:none!important;}.panel{display:block!important;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <svg class="hdr-geo" viewBox="0 0 340 170" fill="none">
+    <circle cx="300" cy="40" r="130" stroke="#2C1A00" stroke-width="22"/>
+    <circle cx="300" cy="40" r="78"  stroke="#2C1A00" stroke-width="14"/>
+    <circle cx="300" cy="40" r="34"  stroke="#2C1A00" stroke-width="8"/>
+    <circle cx="50"  cy="150" r="95"  stroke="#2C1A00" stroke-width="14"/>
+    <line x1="290" y1="0" x2="220" y2="170" stroke="#2C1A00" stroke-width="2"/>
+    <line x1="320" y1="0" x2="250" y2="170" stroke="#2C1A00" stroke-width="1.5"/>
+  </svg>
+  <div class="hdr-inner">
+    <div>
+      <div class="brand-eye">Lounge para clientes Visa Nomad</div>
+      <div class="brand-title">Torcida<br>Amarela</div>
+      <div class="brand-sub">Dashboard de Estoque · 8 Eventos</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="logos">
+        <span class="lv">VISA</span><div class="lsep"></div>
+        <span class="lfifa">FIFA</span><div class="lsep"></div>
+        <span class="lnom">NOMAD</span>
+      </div>
+      <div class="parc">Parceiro Mundial</div>
+      <div><span class="save-pill"><span class="sdot ok" id="sdot"></span><span id="slbl">Salvo</span></span></div>
+      <div class="ts" id="ts"></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('realizado')">📊 Realizado</div>
+  <div class="tab" onclick="switchTab('meta')">🎯 Meta</div>
+  <div class="tab" onclick="switchTab('comparativo')">⚖️ Comparativo</div>
+  <div class="tab" onclick="switchTab('prog')">📈 Prognóstico Futuro</div>
+</div>
+
+<div class="main">
+
+  <!-- REALIZADO -->
+  <div class="panel active" id="panel-realizado">
+    <div style="height:12px;"></div>
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="toolbar">
+      <button class="btn btn-dk" onclick="window.print()">🖨 Imprimir</button>
+      <button class="btn btn-out" onclick="exportCSV('realizado')">⬇ CSV</button>
+      <button class="btn btn-red" onclick="resetData()">↺ Resetar</button>
+      <span class="tip">💡 Eventos realizados: insira as saídas. Futuros: vinculados à Meta.</span>
+    </div>
+    <div class="sec">Estoque por evento</div>
+    <div class="card"><table id="tbl-real"></table></div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;padding:6px 0 14px;font-size:11px;color:var(--dk2);">
+      <span>⬛ Saída realizada (editável)</span>
+      <span style="color:#0A3060;">📋 Vinculado à Meta (futuro)</span>
+      <span style="color:var(--red);">ZERO = esgotado</span>
+    </div>
+    <div class="sec">Alertas de reposição</div>
+    <div class="alert-grid" id="alerts-real"></div>
+    <div class="footnote">Eventos futuros: saída é preenchida automaticamente pela Meta definida. Estoque projetado considera essas saídas planejadas.</div>
+  </div>
+
+  <!-- META -->
+  <div class="panel" id="panel-meta">
+    <div style="height:12px;"></div>
+    <div class="toolbar">
+      <button class="btn btn-out" onclick="exportCSV('meta')">⬇ Exportar CSV</button>
+      <span class="tip">💡 Metas aqui refletem automaticamente nos eventos futuros do Realizado.</span>
+    </div>
+    <div class="sec">Metas planejadas por evento</div>
+    <div class="card"><table id="tbl-meta"></table></div>
+    <div class="footnote">Meta = quantidade planejada para distribuição por evento. A coluna Total atualiza em tempo real.</div>
+  </div>
+
+  <!-- COMPARATIVO -->
+  <div class="panel" id="panel-comparativo">
+    <div style="height:12px;"></div>
+    <div class="toolbar">
+      <button class="btn btn-out" onclick="exportCSV('comparativo')">⬇ Exportar CSV</button>
+      <span class="tip">Entregue vs Meta · variação absoluta e %</span>
+    </div>
+    <div class="sec">Comparativo Entregue × Meta (eventos realizados)</div>
+    <div class="card"><table id="tbl-comp"></table></div>
+    <div class="sec">Resumo total</div>
+    <div class="card"><table id="tbl-comp-total"></table></div>
+    <div class="footnote">✅ Abaixo da meta = distribuiu menos que planejado. ⚠️ Acima = consumo maior que meta — impacta estoque. — = sem meta definida.</div>
+  </div>
+
+  <!-- PROGNÓSTICO FUTURO -->
+  <div class="panel" id="panel-prog">
+    <div style="height:12px;"></div>
+    <div class="prog-cards" id="prog-kpis"></div>
+    <div class="sec">Projeção de consumo — baseado na média dos eventos realizados</div>
+    <div class="card"><table id="tbl-prog"></table></div>
+    <div class="sec">Itens em risco</div>
+    <div class="alert-grid" id="prog-alerts"></div>
+    <div class="footnote">Prognóstico calculado pela média de saída por evento (EV realizados). Ignora metas — usa apenas o ritmo real de consumo. Atualiza automaticamente conforme novos dados são inseridos.</div>
+  </div>
+
+</div>
+
+<script>
+const TOTAL = 8;
+const EVS = [
+  {id:'ev1',lbl:'Ev 1',date:'13/06'},
+  {id:'ev2',lbl:'Ev 2',date:'19/06'},
+  {id:'ev3',lbl:'Ev 3',date:'24/06'},
+  {id:'ev4',lbl:'Ev 4',date:''},
+  {id:'ev5',lbl:'Ev 5',date:''},
+  {id:'ev6',lbl:'Ev 6',date:''},
+  {id:'ev7',lbl:'Ev 7',date:''},
+  {id:'ev8',lbl:'Ev 8',date:''},
+];
+const ITEMS = [
+  {id:'pin',   name:'Pin Visa',         ini:716},
+  {id:'balm',  name:'Balm BanaNomad',   ini:2000},
+  {id:'tag',   name:'Tag de Bagagem',   ini:280},
+  {id:'porta', name:'Porta Passaporte', ini:280},
+  {id:'mini',  name:'Mini Bola',        ini:120},
+  {id:'ecobag',name:'Ecobag Nomad',     ini:680},
+  {id:'copos', name:'Copos',            ini:2200},
+];
+const PFS = {
+  pin:   {ev1:108,ev2:125,ev3:43},
+  balm:  {ev1:244,ev2:81, ev3:164},
+  tag:   {ev1:64, ev2:42, ev3:53},
+  porta: {ev1:57, ev2:22, ev3:53},
+  mini:  {ev1:18, ev2:20, ev3:19},
+  ecobag:{ev1:0,  ev2:39, ev3:43},
+  copos: {ev1:652,ev2:651,ev3:280},
+};
+
+let S = {};
+
+/* ─── STATE ─── */
+function loadState() {
+  try {
+    const r = localStorage.getItem('ta_v6');
+    if (r) { S = JSON.parse(r); } else { initDefault(); return; }
+  } catch(e) { initDefault(); return; }
+  if (!S.saidas) S.saidas = {};
+  if (!S.metas)  S.metas  = {};
+  if (!S.dates)  S.dates  = {};
+  ITEMS.forEach(it => {
+    if (!S.saidas[it.id]) S.saidas[it.id] = {};
+    if (!S.metas[it.id])  S.metas[it.id]  = {};
+  });
+  if (!S.ini) S.ini = {};
+}
+function initDefault() {
+  S = {saidas:{}, metas:{}, dates:{}, ini:{}};
+  ITEMS.forEach(it => {
+    S.saidas[it.id] = Object.assign({}, PFS[it.id] || {});
+    S.metas[it.id]  = {};
+  });
+  EVS.forEach(ev => { S.dates[ev.id] = ev.date; });
+}
+let saveT;
+function save() {
+  const dot = document.getElementById('sdot'), lbl = document.getElementById('slbl');
+  dot.className = 'sdot saving'; lbl.textContent = 'Salvando…';
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try {
+      localStorage.setItem('ta_v6', JSON.stringify(S));
+      dot.className = 'sdot ok';
+      lbl.textContent = 'Salvo ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    } catch(e) { dot.className = 'sdot'; lbl.textContent = 'Erro'; }
+  }, 600);
+}
+
+/* ─── ACCESSORS ─── */
+function getSaida(iid, eid) {
+  const v = S.saidas[iid]?.[eid];
+  return (v !== undefined && v !== '') ? (parseFloat(v) || 0) : null;
+}
+function getMeta(iid, eid) {
+  const v = S.metas[iid]?.[eid];
+  return (v !== undefined && v !== '') ? parseFloat(v) || 0 : 0;
+}
+function getDate(eid) {
+  return S.dates[eid] || EVS.find(e => e.id === eid)?.date || '';
+}
+// Retorna estoque inicial — usa valor editado ou padrão
+function getIni(iid) {
+  const v = S.ini?.[iid];
+  return (v !== undefined && v !== '') ? (parseFloat(v) || 0) : (ITEMS.find(i => i.id === iid)?.ini ?? 0);
+}
+
+/* ─── CALCULATIONS ─── */
+// Index of last event with any actual saída
+function ldi() {
+  let l = -1;
+  for (let i = 0; i < EVS.length; i++) {
+    if (ITEMS.some(it => getSaida(it.id, EVS[i].id) !== null)) l = i;
+  }
+  return l;
+}
+
+// Stock after event ei — uses actual saídas only (no projection)
+function stockAfter(iid, ei) {
+  if (ei < 0) return getIni(iid);
+  let s = getIni(iid);
+  for (let i = 0; i <= ei; i++) {
+    const sd = getSaida(iid, EVS[i].id);
+    if (sd !== null) s -= sd;
+  }
+  return Math.max(0, s);
+}
+
+// Stock after event ei — uses actual for past, meta for future events
+function stockPlan(iid, ei) {
+  if (ei < 0) return getIni(iid);
+  const l = ldi();
+  let s = getIni(iid);
+  for (let i = 0; i <= ei; i++) {
+    const sd = getSaida(iid, EVS[i].id);
+    if (sd !== null) {
+      s -= sd;
+    } else if (i > l) {
+      s -= getMeta(iid, EVS[i].id);
+    }
+  }
+  return Math.max(0, s);
+}
+
+// Average saída rate from actual events (for prognóstico)
+function avgRate(iid) {
+  const l = ldi();
+  if (l < 0) return 0;
+  let total = 0, count = 0;
+  for (let i = 0; i <= l; i++) {
+    const s = getSaida(iid, EVS[i].id);
+    if (s !== null) { total += s; count++; }
+  }
+  return count > 0 ? total / count : 0;
+}
+
+// Last non-zero actual rate (for Esgota column)
+function lastRate(iid) {
+  for (let i = EVS.length - 1; i >= 0; i--) {
+    const s = getSaida(iid, EVS[i].id);
+    if (s !== null && s > 0) return s;
+  }
+  return 0;
+}
+
+/* ─── TAB SWITCH ─── */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) =>
+    t.classList.toggle('active', ['realizado','meta','comparativo','prog'][i] === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'realizado')   renderReal();
+  if (name === 'meta')        renderMeta();
+  if (name === 'comparativo') renderComp();
+  if (name === 'prog')        renderProg();
+}
+
+/* ─── RENDER REALIZADO ─── */
+function renderReal() {
+  const l = ldi();
+  const tbl = document.getElementById('tbl-real');
+
+  // Row 1: event labels
+  let h = `<thead>
+  <tr>
+    <th class="l" rowspan="2">Item</th>
+    <th class="ev-end" rowspan="2" style="background:#3A2800;color:#E8C060;min-width:80px;">Inicial</th>`;
+  EVS.forEach(ev => {
+    h += `<th class="ev-end" colspan="2" style="background:var(--dk);color:var(--y);">${ev.lbl}</th>`;
+  });
+  h += `<th class="ev-end" rowspan="2">Esgota</th><th class="ev-end" rowspan="2">Falta/Sobra</th></tr>`;
+
+  // Row 2: Saída / Est. sub-headers
+  h += `<tr>`;
+  EVS.forEach((ev, i) => {
+    const isFut = i > l;
+    h += `<th class="sub">Saída${isFut ? ' (Meta)' : ''}</th><th class="sub-e">Estoque</th>`;
+  });
+  h += `</tr></thead>`;
+
+  // Body
+  let b = '<tbody>';
+  ITEMS.forEach(it => {
+    const iniVal = getIni(it.id);
+    b += `<tr>
+      <td class="l">${it.name}</td>
+      <td><input class="ni" data-item="${it.id}" data-type="ini"
+        value="${iniVal}" type="number" min="0"
+        style="width:70px;font-weight:700;" /></td>`;
+
+    EVS.forEach((ev, i) => {
+      const isFut = i > l;
+      const sd = getSaida(it.id, ev.id);
+      const hasData = sd !== null;
+      const meta = getMeta(it.id, ev.id);
+
+      // SAÍDA CELL
+      if (!isFut) {
+        // Past/current events: editable input
+        b += `<td>
+          <input class="ni${hasData ? ' hv' : ''}"
+            data-item="${it.id}" data-ev="${ev.id}" data-type="saida"
+            value="${hasData ? sd : ''}" placeholder="—"
+            type="number" min="0" />
+        </td>`;
+      } else {
+        // Future events: show meta value (read-only, linked)
+        b += `<td style="background:#F4F8FF;">
+          <div class="meta-link${meta > 0 ? ' set' : ''}">${meta > 0 ? meta.toLocaleString('pt-BR') : '—'}</div>
+          <span class="meta-lbl">meta</span>
+        </td>`;
+      }
+
+      // ESTOQUE CELL
+      const st = !isFut ? stockAfter(it.id, i) : stockPlan(it.id, i);
+      const sc = st <= 0 ? 's-zero' : st <= 50 ? 's-low' : st <= 100 ? 's-mid' : 's-ok';
+      const fStyle = isFut ? 'color:#888;font-style:italic;' : '';
+      b += `<td class="${sc}" style="${fStyle}">
+        ${st <= 0 ? 'ZERO' : st.toLocaleString('pt-BR')}
+      </td>`;
+    });
+
+    // Esgota / Falta columns (based on last actual rate)
+    const rate = lastRate(it.id);
+    const cur  = stockAfter(it.id, l < 0 ? -1 : l);
+    const rem  = TOTAL - 1 - (l < 0 ? -1 : l);
+    let zerou = null, s = cur;
+    for (let k = l + 1; k < EVS.length; k++) { s -= rate; if (s <= 0 && !zerou) zerou = k + 1; }
+    const falta = Math.max(0, rate * rem - cur);
+    const sobra = cur - rate * rem;
+
+    if (rate === 0) {
+      b += `<td><span class="pill pgray">—</span></td><td style="color:#AAA;">—</td>`;
+    } else if (zerou) {
+      b += `<td><span class="pill pbad">Ev ${zerou}</span></td><td style="color:var(--red);font-weight:700;">+${falta.toLocaleString('pt-BR')}</td>`;
+    } else {
+      b += `<td><span class="pill pok">OK</span></td><td style="color:var(--grn);">+${sobra.toLocaleString('pt-BR')}</td>`;
+    }
+
+    b += '</tr>';
+  });
+  b += '</tbody>';
+  tbl.innerHTML = h + b;
+
+  // Bind inicial inputs
+  tbl.querySelectorAll('.ni[data-type="ini"]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const {item} = e.target.dataset;
+      const v = e.target.value.trim();
+      if (!S.ini) S.ini = {};
+      S.ini[item] = v === '' ? undefined : parseFloat(v) || 0;
+      renderReal(); renderKPIs(); save();
+    });
+  });
+
+  // Bind saída inputs
+  tbl.querySelectorAll('.ni[data-type="saida"]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const {item, ev} = e.target.dataset;
+      const v = e.target.value.trim();
+      if (v === '') {
+        delete S.saidas[item][ev];
+      } else {
+        S.saidas[item][ev] = parseFloat(v) || 0;
+      }
+      e.target.classList.toggle('hv', v !== '');
+      renderReal(); renderKPIs(); save();
+    });
+  });
+
+  renderAlerts();
+}
+
+/* ─── RENDER META ─── */
+function renderMeta() {
+  const tbl = document.getElementById('tbl-meta');
+  let h = `<thead><tr>
+    <th class="l">Item</th>`;
+  EVS.forEach(ev => { h += `<th class="meta-h">${ev.lbl}</th>`; });
+  h += `<th class="meta-h">Total</th></tr></thead><tbody>`;
+
+  ITEMS.forEach(it => {
+    let tot = 0;
+    let row = `<tr data-item-id="${it.id}">
+      <td class="l">${it.name}<span class="ini-sub">ini: ${getIni(it.id).toLocaleString('pt-BR')}</span></td>`;
+    EVS.forEach(ev => {
+      const v = getMeta(it.id, ev.id);
+      tot += v;
+      row += `<td><input class="ni meta-i${v > 0 ? ' hv' : ''}"
+        data-item="${it.id}" data-ev="${ev.id}"
+        value="${v || ''}" placeholder="0" type="number" min="0" /></td>`;
+    });
+    row += `<td class="meta-total" style="font-weight:700;color:var(--dk);">${tot.toLocaleString('pt-BR')}</td>`;
+    h += row + '</tr>';
+  });
+
+  tbl.innerHTML = h + '</tbody>';
+
+  // Live sum per row + save
+  tbl.querySelectorAll('.ni.meta-i').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const {item, ev} = e.target.dataset;
+      const v = e.target.value.trim();
+      S.metas[item][ev] = v === '' ? 0 : parseFloat(v) || 0;
+      e.target.classList.toggle('hv', parseFloat(v) > 0);
+      // Update total cell for this row live
+      const row = e.target.closest('tr');
+      let tot = 0;
+      row.querySelectorAll('.ni.meta-i').forEach(i => tot += parseFloat(i.value) || 0);
+      row.querySelector('.meta-total').textContent = tot.toLocaleString('pt-BR');
+      save();
+    });
+  });
+}
+
+/* ─── RENDER COMPARATIVO ─── */
+function renderComp() {
+  const l = ldi();
+  const tbl = document.getElementById('tbl-comp');
+
+  if (l < 0) {
+    tbl.innerHTML = '<tr><td colspan="20" style="padding:24px;text-align:center;color:#AAA;">Aguardando dados dos primeiros eventos.</td></tr>';
+    document.getElementById('tbl-comp-total').innerHTML = '';
+    return;
+  }
+
+  let h = `<thead><tr>
+    <th class="l">Item</th>
+    <th class="l" style="font-size:9px;color:#aaa;">Métrica</th>`;
+  for (let i = 0; i <= l; i++) {
+    const d = getDate(EVS[i].id);
+    h += `<th class="ev-end">${EVS[i].lbl}${d ? `<br><span style="font-weight:400;font-size:9px;">${d}</span>` : ''}</th>`;
+  }
+  h += `<th class="ev-end">Total</th></tr></thead><tbody>`;
+
+  ITEMS.forEach(it => {
+    let rR = `<tr>
+      <td class="l" rowspan="3" style="vertical-align:middle;">${it.name}</td>
+      <td style="font-size:10px;color:var(--gray);padding-left:12px;">Entregue</td>`;
+    let mR = `<tr><td style="font-size:10px;color:#0A3060;padding-left:12px;">Meta</td>`;
+    let vR = `<tr style="border-bottom:2px solid #EDE8DC;">
+      <td style="font-size:10px;color:var(--gray);padding-left:12px;">Variação</td>`;
+    let tR = 0, tM = 0;
+
+    for (let i = 0; i <= l; i++) {
+      const r = getSaida(it.id, EVS[i].id) ?? 0;
+      const m = getMeta(it.id, EVS[i].id);
+      const diff = r - m;
+      const pct = m > 0 ? Math.round((diff / m) * 100) : null;
+      tR += r; tM += m;
+      rR += `<td>${r.toLocaleString('pt-BR')}</td>`;
+      mR += `<td style="color:#0A3060;">${m > 0 ? m.toLocaleString('pt-BR') : '<span style="color:#CCC;">—</span>'}</td>`;
+      if (m === 0) {
+        vR += `<td class="vs-zero">—</td>`;
+      } else {
+        const c = diff > 0 ? 'vs-bad' : 'vs-good';
+        const s2 = diff > 0 ? '+' : '';
+        const pc = diff > 0 ? 'pct-bad' : 'pct-ok';
+        vR += `<td class="${c}">${s2}${diff.toLocaleString('pt-BR')} <span class="pct-pill ${pc}">${s2}${pct}%</span></td>`;
+      }
+    }
+
+    const td = tR - tM, tp = tM > 0 ? Math.round((td / tM) * 100) : null;
+    rR += `<td style="font-weight:700;">${tR.toLocaleString('pt-BR')}</td></tr>`;
+    mR += `<td style="font-weight:700;color:#0A3060;">${tM > 0 ? tM.toLocaleString('pt-BR') : '—'}</td></tr>`;
+    if (tM === 0) {
+      vR += `<td class="vs-zero">—</td></tr>`;
+    } else {
+      const c = td > 0 ? 'vs-bad' : 'vs-good', s2 = td > 0 ? '+' : '', pc = td > 0 ? 'pct-bad' : 'pct-ok';
+      vR += `<td class="${c}">${s2}${td.toLocaleString('pt-BR')} <span class="pct-pill ${pc}">${s2}${tp}%</span></td></tr>`;
+    }
+    h += rR + mR + vR;
+  });
+  tbl.innerHTML = h + '</tbody>';
+
+  // Total summary table
+  const tbl2 = document.getElementById('tbl-comp-total');
+  let h2 = `<thead><tr>
+    <th class="l">Item</th>
+    <th class="ev-end">Total Entregue</th>
+    <th class="meta-h">Total Meta</th>
+    <th class="ev-end">Variação</th>
+    <th style="background:#3A2400;color:#E0C060;">%</th>
+  </tr></thead><tbody>`;
+  ITEMS.forEach(it => {
+    let tR = 0, tM = 0;
+    for (let i = 0; i <= l; i++) { tR += getSaida(it.id, EVS[i].id) ?? 0; tM += getMeta(it.id, EVS[i].id); }
+    const diff = tR - tM, pct = tM > 0 ? Math.round((diff / tM) * 100) : null;
+    const c = diff > 0 ? 'vs-bad' : diff < 0 ? 'vs-good' : 'vs-zero';
+    const s2 = diff > 0 ? '+' : '', pc = diff > 0 ? 'pct-bad' : diff < 0 ? 'pct-ok' : 'pct-neu';
+    h2 += `<tr>
+      <td class="l">${it.name}</td>
+      <td style="font-weight:700;">${tR.toLocaleString('pt-BR')}</td>
+      <td style="color:#0A3060;font-weight:600;">${tM > 0 ? tM.toLocaleString('pt-BR') : '—'}</td>
+      <td class="${c}">${tM > 0 ? s2 + diff.toLocaleString('pt-BR') : '—'}</td>
+      <td>${pct !== null ? `<span class="pct-pill ${pc}">${s2}${pct}%</span>` : '—'}</td>
+    </tr>`;
+  });
+  tbl2.innerHTML = h2 + '</tbody>';
+}
+
+/* ─── RENDER PROGNÓSTICO FUTURO ─── */
+function renderProg() {
+  const l = ldi();
+  const progKPIs = document.getElementById('prog-kpis');
+  const tbl = document.getElementById('tbl-prog');
+  const alertsEl = document.getElementById('prog-alerts');
+
+  if (l < 0) {
+    progKPIs.innerHTML = '';
+    tbl.innerHTML = '<tr><td colspan="16" style="padding:32px;text-align:center;color:#AAA;font-style:italic;">Aguardando dados dos primeiros eventos para gerar prognóstico.</td></tr>';
+    alertsEl.innerHTML = '';
+    return;
+  }
+
+  const pastEvs   = EVS.slice(0, l + 1);   // eventos com dados reais
+  const futureEvs = EVS.slice(l + 1);       // eventos futuros
+  const evsDone   = l + 1;
+  const evsLeft   = TOTAL - evsDone;
+
+  // Calcula média real: soma das saídas / número de eventos com dados
+  const data = ITEMS.map(it => {
+    let total = 0, count = 0;
+    pastEvs.forEach(ev => {
+      const s = getSaida(it.id, ev.id);
+      if (s !== null) { total += s; count++; }
+    });
+    const rateExact = count > 0 ? total / count : 0;
+    const rateR     = Math.round(rateExact);
+    const cur       = stockAfter(it.id, l);
+    const projections = futureEvs.map((_, fi) => Math.max(0, cur - rateR * (fi + 1)));
+    let zerou = null;
+    projections.forEach((p, fi) => { if (p <= 0 && !zerou) zerou = fi; });
+    const falta = Math.max(0, rateR * evsLeft - cur);
+    const sobra = cur - rateR * evsLeft;
+    return { it, rateExact, rateR, cur, projections, zerou, falta, sobra };
+  });
+
+  // KPI cards
+  const atRisk = data.filter(d => d.zerou !== null).length;
+  const firstZeroIdx = data.filter(d => d.zerou !== null).length > 0
+    ? Math.min(...data.filter(d => d.zerou !== null).map(d => d.zerou)) : null;
+  const totalCurStock = data.reduce((a, d) => a + d.cur, 0);
+
+  progKPIs.innerHTML = `
+    <div class="pc${atRisk > 3 ? ' risk' : atRisk > 0 ? ' warn' : ''}">
+      <div class="pc-label">Itens em risco</div>
+      <div class="pc-val">${atRisk} <span style="font-size:14px;">/ 7</span></div>
+      <div class="pc-sub">${atRisk === 0 ? 'nenhum crítico' : 'precisam reposição'}</div>
+    </div>
+    <div class="pc">
+      <div class="pc-label">Eventos realizados</div>
+      <div class="pc-val">${evsDone} <span style="font-size:14px;">/ 8</span></div>
+      <div class="pc-sub">${evsLeft} eventos restantes</div>
+    </div>
+    <div class="pc${firstZeroIdx !== null ? ' risk' : ''}">
+      <div class="pc-label">1º esgotamento</div>
+      <div class="pc-val">${firstZeroIdx !== null ? (futureEvs[firstZeroIdx]?.lbl || 'Ev?') : 'OK'}</div>
+      <div class="pc-sub">${firstZeroIdx !== null ? 'primeiro item a zerar' : 'estoque suficiente'}</div>
+    </div>
+    <div class="pc">
+      <div class="pc-label">Estoque atual total</div>
+      <div class="pc-val" style="font-size:18px;margin-top:4px;">${totalCurStock.toLocaleString('pt-BR')}</div>
+      <div class="pc-sub">unidades após Ev ${evsDone}</div>
+    </div>`;
+
+  // ── TABELA: Inicial | EV1..EVn (saídas reais) | Média | Est.Atual | EV(n+1)..EV8 proj | Esgota | Reposição
+  let h = `<thead><tr>
+    <th class="l" rowspan="2">Item</th>
+    <th class="prog-h" rowspan="2">Inicial</th>`;
+
+  // Cabeçalhos dos eventos realizados
+  pastEvs.forEach(ev => {
+    h += `<th class="prog-h">${ev.lbl}</th>`;
+  });
+
+  // Média + Estoque atual
+  h += `<th class="prog-h" style="background:#2A4020;border-left:2px solid #5A8060;">Média/Ev</th>`;
+  h += `<th class="prog-h" style="background:#1E3818;border-left:2px solid #4A7050;">Est. Atual</th>`;
+
+  // Cabeçalhos dos eventos futuros (projeção)
+  futureEvs.forEach(ev => {
+    h += `<th class="prog-h" style="background:#0F2014;">${ev.lbl} ★</th>`;
+  });
+
+  h += `<th class="prog-h">Esgota em</th><th class="prog-h">Reposição</th></tr>
+  <tr>`;
+  // sub-cabeçalhos
+  pastEvs.forEach(() => { h += `<th class="prog-sub">saída real</th>`; });
+  h += `<th class="prog-sub" style="background:#2A4020;">(${evsDone} ev)</th>`;
+  h += `<th class="prog-sub" style="background:#1E3818;">após Ev ${evsDone}</th>`;
+  futureEvs.forEach(() => { h += `<th class="prog-sub" style="background:#0F2014;">proj.</th>`; });
+  h += `<th class="prog-sub">evento</th><th class="prog-sub">unidades</th></tr></thead><tbody>`;
+
+  // Linhas de dados
+  data.forEach(d => {
+    h += `<tr>
+      <td class="l">${d.it.name}</td>
+      <td style="font-weight:600;color:var(--gray);">${getIni(d.it.id).toLocaleString('pt-BR')}</td>`;
+
+    // Saídas reais por evento
+    pastEvs.forEach(ev => {
+      const sd = getSaida(d.it.id, ev.id);
+      h += `<td style="font-weight:500;">${sd !== null ? sd.toLocaleString('pt-BR') : '—'}</td>`;
+    });
+
+    // Média (exata e arredondada)
+    h += `<td style="background:#EDF5EC;font-weight:800;color:#1A4020;border-left:2px solid #A0C8A0;">
+      ${d.rateR > 0 ? d.rateR.toLocaleString('pt-BR') : '—'}
+      ${d.rateExact > 0 ? `<div style="font-size:9px;color:#6A9870;font-weight:400;">(${d.rateExact.toFixed(1)}/ev)</div>` : ''}
+    </td>`;
+
+    // Estoque atual
+    const curSc = d.cur <= 0 ? 's-zero' : d.cur <= 100 ? 's-low' : d.cur <= 200 ? 's-mid' : '';
+    h += `<td class="${curSc}" style="font-weight:800;background:#E0F0DC;border-left:2px solid #90C898;">${d.cur.toLocaleString('pt-BR')}</td>`;
+
+    // Projeções futuras
+    d.projections.forEach(p => {
+      const sc = p <= 0 ? 's-zero' : p <= 50 ? 's-low' : p <= 100 ? 's-mid' : '';
+      const bg = p <= 0 ? 'background:#FCEAEA;' : p <= 50 ? 'background:#FEF0E0;' : 'background:#F4F8F4;';
+      h += `<td class="${sc}" style="${bg}font-style:italic;">${p <= 0 ? 'ZERO' : p.toLocaleString('pt-BR')}</td>`;
+    });
+
+    // Esgota / Reposição
+    if (d.rateR === 0) {
+      h += `<td><span class="pill pgray">—</span></td><td style="color:#AAA;">sem dados</td>`;
+    } else if (d.zerou !== null) {
+      h += `<td><span class="pill pbad">${futureEvs[d.zerou]?.lbl || 'Ev?'}</span></td>`;
+      h += `<td style="color:var(--red);font-weight:700;">+${d.falta.toLocaleString('pt-BR')}</td>`;
+    } else {
+      h += `<td><span class="pill pok">OK</span></td>`;
+      h += `<td style="color:var(--grn);">+${d.sobra.toLocaleString('pt-BR')} sobra</td>`;
+    }
+    h += '</tr>';
+  });
+  tbl.innerHTML = h + '</tbody>';
+
+  // Alert cards
+  const rows = [];
+  data.forEach(d => {
+    if (d.rateR === 0) {
+      rows.push({n: d.it.name, t:'warn', m:'Sem dados suficientes', dd:`${evsDone} evento(s) com dados`});
+    } else if (d.zerou !== null) {
+      rows.push({n: d.it.name, t:'crit',
+        m:`Esgota no ${futureEvs[d.zerou]?.lbl} — repor +${d.falta.toLocaleString('pt-BR')} un`,
+        dd:`Média: ${d.rateExact.toFixed(1)}/ev · Atual: ${d.cur.toLocaleString('pt-BR')} · ${evsLeft} ev restantes`});
+    } else {
+      rows.push({n: d.it.name, t:'ok',
+        m:`OK — sobra ${d.sobra.toLocaleString('pt-BR')} un após ${futureEvs[futureEvs.length-1]?.lbl || 'Ev 8'}`,
+        dd:`Média: ${d.rateExact.toFixed(1)}/ev · Atual: ${d.cur.toLocaleString('pt-BR')}`});
+    }
+  });
+  rows.sort((a,b) => ({crit:0,warn:1,ok:2}[a.t] - {crit:0,warn:1,ok:2}[b.t]));
+  alertsEl.innerHTML = rows.map(r => {
+    const col = r.t === 'crit' ? 'var(--red)' : r.t === 'warn' ? 'var(--ora)' : 'var(--grn)';
+    return `<div class="ac ${r.t}">
+      <div class="an">${r.n}</div>
+      <div class="ar" style="color:${col};">${r.m}</div>
+      <div class="ad">${r.dd}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── RENDER KPIs (Realizado tab) ─── */
+function renderKPIs() {
+  const l = ldi();
+  const cur = l < 0 ? -1 : l;
+  let total = 0;
+  ITEMS.forEach(it => total += stockAfter(it.id, cur));
+  let crit = 0, cn = [];
+  ITEMS.forEach(it => {
+    const rate = lastRate(it.id), stk = stockAfter(it.id, cur), rem = TOTAL - 1 - cur;
+    if (rate > 0 && stk < rate * rem) { crit++; cn.push(it.name.split(' ')[0]); }
+  });
+  const nxt = l < EVS.length - 1 ? EVS[l + 1] : null;
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi"><div class="kl">Progresso</div><div class="kv">${l+1}/8</div><div class="ks">eventos realizados</div></div>
+    <div class="kpi"><div class="kl">Restam</div><div class="kv">${TOTAL-(l+1)}</div><div class="ks">eventos</div></div>
+    <div class="kpi ak"><div class="kl">Itens críticos</div><div class="kv">${crit}</div><div class="ks">${cn.slice(0,3).join(' · ')||'nenhum'}</div></div>
+    <div class="kpi"><div class="kl">Estoque total</div><div class="kv" style="font-size:18px;margin-top:4px;">${total.toLocaleString('pt-BR')}</div><div class="ks">unidades</div></div>
+    <div class="kpi wk"><div class="kl">Próximo evento</div><div class="kv" style="font-size:16px;margin-top:4px;">${nxt ? nxt.lbl : 'Fim'}</div><div class="ks">${nxt ? getDate(nxt.id)||'data pendente' : 'Todos realizados'}</div></div>`;
+}
+
+/* ─── ALERTS (Realizado) ─── */
+function renderAlerts() {
+  const l = ldi(), cur = l < 0 ? -1 : l, rem = TOTAL - 1 - cur;
+  const el = document.getElementById('alerts-real');
+  const rows = [];
+  ITEMS.forEach(it => {
+    const rate = lastRate(it.id), stk = stockAfter(it.id, cur);
+    if (rate === 0) {
+      rows.push({n: it.name, t:'warn', m:'Sem dados de saída', dd:'Insira os valores.'});
+      return;
+    }
+    const falta = Math.max(0, rate * rem - stk), sobra = stk - rate * rem;
+    if (falta > 0) {
+      let z = null, s = stk;
+      for (let k = cur + 1; k < EVS.length; k++) { s -= rate; if (s <= 0 && !z) z = k + 1; }
+      rows.push({n: it.name, t:'crit', m:`Repor +${falta.toLocaleString('pt-BR')} un — esgota Ev ${z}`, dd:`Taxa: ${rate}/ev · Atual: ${stk.toLocaleString('pt-BR')}`});
+    } else {
+      rows.push({n: it.name, t:'ok', m:`OK — sobra ${sobra.toLocaleString('pt-BR')} un após Ev 8`, dd:`Taxa: ${rate}/ev · ${rem} ev restantes`});
+    }
+  });
+  rows.sort((a,b) => ({crit:0,warn:1,ok:2}[a.t] - {crit:0,warn:1,ok:2}[b.t]));
+  el.innerHTML = rows.map(r => {
+    const col = r.t === 'crit' ? 'var(--red)' : r.t === 'warn' ? 'var(--ora)' : 'var(--grn)';
+    return `<div class="ac ${r.t}"><div class="an">${r.n}</div><div class="ar" style="color:${col};">${r.m}</div><div class="ad">${r.dd}</div></div>`;
+  }).join('');
+}
+
+/* ─── UTILITIES ─── */
+function resetData() {
+  if (!confirm('Resetar todos os dados? Não pode ser desfeito.')) return;
+  localStorage.removeItem('ta_v6');
+  initDefault();
+  renderReal(); renderMeta(); renderKPIs();
+}
+
+function exportCSV(tab) {
+  const l = ldi(); let csv = '';
+  if (tab === 'realizado') {
+    csv = 'Item,Inicial,' + EVS.map(e => e.lbl + ' Saída,' + e.lbl + ' Estoque').join(',') + ',Taxa,Esgota,Falta\n';
+    ITEMS.forEach(it => {
+      let row = `"${it.name}",${it.ini}`;
+      EVS.forEach((ev, i) => {
+        const sd = getSaida(it.id, ev.id);
+        const st = i <= l ? stockAfter(it.id, i) : stockPlan(it.id, i);
+        row += `,${sd !== null ? sd : getMeta(it.id, ev.id)},${st}`;
+      });
+      const rate = lastRate(it.id), cur = stockAfter(it.id, l < 0 ? -1 : l), rem = TOTAL - 1 - (l < 0 ? -1 : l);
+      const falta = Math.max(0, rate * rem - cur);
+      let z = 'OK', s = cur;
+      for (let k = (l < 0 ? 0 : l) + 1; k < EVS.length; k++) { s -= rate; if (s <= 0 && z === 'OK') z = `Ev ${k + 1}`; }
+      csv += row + `,${rate},${z},${falta}\n`;
+    });
+  } else if (tab === 'meta') {
+    csv = 'Item,' + EVS.map(e => e.lbl).join(',') + ',Total\n';
+    ITEMS.forEach(it => {
+      let row = `"${it.name}"`, tot = 0;
+      EVS.forEach(ev => { const v = getMeta(it.id, ev.id); tot += v; row += `,${v}`; });
+      csv += row + `,${tot}\n`;
+    });
+  } else {
+    csv = 'Item,' + EVS.slice(0, l + 1).map(e => e.lbl + ' Entregue,' + e.lbl + ' Meta,' + e.lbl + ' Var').join(',') + ',Tot.R,Tot.M,Tot.Var\n';
+    ITEMS.forEach(it => {
+      let row = `"${it.name}"`, tR = 0, tM = 0;
+      for (let i = 0; i <= l; i++) {
+        const r = getSaida(it.id, EVS[i].id) ?? 0, m = getMeta(it.id, EVS[i].id);
+        tR += r; tM += m; row += `,${r},${m},${r-m}`;
+      }
+      csv += row + `,${tR},${tM},${tR-tM}\n`;
+    });
+  }
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+  a.download = `torcida_${tab}.csv`;
+  a.click();
+}
+
+/* ─── INIT ─── */
+document.getElementById('ts').textContent = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+loadState();
+renderReal();
+renderKPIs();
+</script>
+</body>
+</html>
